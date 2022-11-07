@@ -156,6 +156,20 @@ class CFrame:
 
         return new_cf
 
+    def look_at(pos1, pos2):
+
+        # finding angle
+        direction = (pos2 - pos1).unit
+        angle = None
+
+        if direction.y >= 0:
+            angle = math.acos(direction.x)
+        else:
+            angle = math.pi*2 - math.acos(direction.x)
+
+        # returning cframe
+        return CFrame(pos1) * CFrame.angle(angle)
+
     @property
     def components(self):
         m11, m12, m13, m21, m22, m23, m31, m32, m33 = self.__components

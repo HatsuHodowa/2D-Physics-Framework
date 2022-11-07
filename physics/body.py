@@ -58,20 +58,7 @@ class RigidBody:
                 continue
 
             # checking collision
-            points = self.obj.calculate_points()
-            o_points = other.obj.calculate_points()
-
-            is_colliding = False
-            for point in points:
-                if other.obj.point_in_box(point):
-                    is_colliding = True
-                    break
-
-            if not is_colliding:
-                for o_point in o_points:
-                    if self.obj.point_in_box(point):
-                        is_colliding = True
-                        break
+            
 
     def remove_force(self, force):
         self._forces.remove(force)

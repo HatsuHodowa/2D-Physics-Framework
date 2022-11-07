@@ -54,20 +54,41 @@ class Box:
 
         # finding boundaries
         points = self.calculate_points()
-        max_x, min_x = 0, 0
-        max_y, min_y = 0, 0
+        max_x, min_x = None, None
+        max_y, min_y = None, None
 
-        for point in points:
-            max_x = max(point.x, max_x)
-            min_x = min(point.x, min_x)
-            max_y = max(point.y, max_y)
-            min_y = min(point.y, min_y)
+        for i, point in enumerate(points):
+            if i != 0:
+                max_x = max(point.x, max_x)
+                min_x = min(point.x, min_x)
+                max_y = max(point.y, max_y)
+                min_y = min(point.y, min_y)
+            else:
+                max_x = point.x
+                min_x = point.x
+                max_y = point.y
+                min_y = point.y
 
         # checking boundaries
         x_bool = check_point.x < max_x and check_point.x > min_x
         y_bool = check_point.y < max_y and check_point.y > min_y
         
         return x_bool and y_bool
+
+    def box_in_box(self, other):
+
+        # calculating points
+        s_points = self.calculate_points()
+        o_points = other.calculate_points()
+
+        # looping edges
+        for i, s_point in enumerate(s_points):
+            i2 = i - 1
+
+            # looping other points
+            for o_point in o_points:
+                direction = (s_points)
+                dot = o_point.dot()
 
     def draw(self, camera):
         if not self.screen:
