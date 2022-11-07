@@ -8,4 +8,4 @@ points = box1.calculate_points()
 while True:
     time.sleep(0.1)
     
-    #collision = box2.box_in_box(box1)
+    collision = box2.box_in_box(box1)

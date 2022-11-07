@@ -87,8 +87,11 @@ class Box:
 
             # looping other points
             for o_point in o_points:
-                direction = (s_points)
-                dot = o_point.dot()
+                direction = (s_points[i] - s_points[i2]).unit
+
+                s_dot1 = s_points[i].dot(direction)
+                s_dot2 = s_points[i2].dot(direction)
+                o_dot = o_point.dot(direction)
 
     def draw(self, camera):
         if not self.screen:
