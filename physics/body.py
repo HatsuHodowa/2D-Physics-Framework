@@ -9,79 +9,95 @@ from cframe import *
 
 # force
 class Force:
-    all_forces = []
-    next_id = 0
+	all_forces = []
+	next_id = 0
 
-    def __init__(self, x=0, y=5):
-        self.force = Vector2(x, y)
-        self.id = Force.next_id
-        Force.next_id += 1
+	def __init__(self, x=0, y=5, one_frame=False):
+		if type(x) == Vector2:
+			x, y = x.x, x.y
 
-        Force.all_forces.append(self)
+		self.force = Vector2(x, y)
+		self.one_frame = one_frame
+		self.id = Force.next_id
+		Force.next_id += 1
 
-    def __eq__(self, other):
-        if type(other) != Force:
-            return False
+		Force.all_forces.append(self)
 
-        return self.id == other.id
+	def __eq__(self, other):
+		if type(other) != Force:
+			return False
+
+		return self.id == other.id
 
 # rigid body
 class RigidBody:
-    all_bodies = []
-    next_id = 0
+	all_bodies = []
+	next_id = 0
 
-    def __init__(self, obj):
-        self._forces = []
-        self.obj = obj
-        self.id = RigidBody.next_id
-        RigidBody.next_id += 1
+	def __init__(self, obj):
+		self._forces = []
+		self.obj = obj
+		self.id = RigidBody.next_id
+		RigidBody.next_id += 1
 
-        RigidBody.all_bodies.append(self)
+		RigidBody.all_bodies.append(self)
 
-    def __eq__(self, other):
-        if type(other) != RigidBody:
-            return False
+	def __eq__(self, other):
+		if type(other) != RigidBody:
+			return False
 
-        return self.id == other.id
+		return self.id == other.id
 
-    def update(self, dt):
-        self.calculate_normal_forces()
+	def update(self, dt):
+		self.clear_temp_forces()
+		self.calculate_normal_forces()
 
-        acceleration = self.net_force / self.obj.mass
-        self.obj.velocity += acceleration * dt
-        self.obj.position += self.obj.velocity * dt
+		acceleration = self.net_force / self.obj.mass
+		self.obj.velocity += acceleration * dt
+		self.obj.position += self.obj.velocity * dt
 
-    def calculate_normal_forces(self):
-        objects = RigidBody.all_bodies.copy()
-        for other in objects:
-            if other == self.obj:
-                continue
+	def calculate_normal_forces(self):
+		objects = RigidBody.all_bodies.copy()
+		for other in objects:
+			if other.obj == self.obj:
+				continue
 
-            # checking collision
-            
+			# checking collision
+			collides, normal = self.obj.check_collision(other.obj)
+			if collides:
 
-    def remove_force(self, force):
-        self._forces.remove(force)
+				# colliding / normal force
+				s_net = self.net_force
+				o_net = other.net_force
+				self.add_force(Force(o_net, True))
 
-    def add_force(self, force, last=None):
-        self._forces.append(force)
+	def remove_force(self, force):
+		self._forces.remove(force)
 
-        if last:
-            def delay_remove():
-                time.sleep(last)
-                self.remove_force(force)
+	def add_force(self, force, last=None):
+		self._forces.append(force)
 
-            thread = threading.Thread(target=delay_remove)
-            thread.start()
+		if last:
+			def delay_remove():
+				time.sleep(last)
+				self.remove_force(force)
 
-    @property
-    def forces(self):
-        return self._forces.copy()
+			thread = threading.Thread(target=delay_remove)
+			thread.start()
 
-    @property
-    def net_force(self):
-        final_force = Vector2()
-        for force in self.forces:
-            final_force += force.force
+	def clear_temp_forces(self):
+		for force in self.forces:
+			if force.one_frame:
+				self.remove_force(force)
 
-        return final_force
+	@property
+	def forces(self):
+		return self._forces.copy()
+
+	@property
+	def net_force(self):
+		final_force = Vector2()
+		for force in self.forces:
+			final_force += force.force
+
+		return final_force
