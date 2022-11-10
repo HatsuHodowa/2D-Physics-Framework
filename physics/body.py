@@ -77,12 +77,24 @@ class RigidBody:
 				s_vel = self.obj.velocity
 				o_vel = other.obj.velocity
 
+				# velocity
 				final_velocity = (s_vel * self.obj.mass + o_vel * other.obj.mass) / (self.obj.mass + other.obj.mass)
 				self.obj.velocity = final_velocity
 
+				# force
+				if self.anchored == False:
+					self.add_force(Force(-self.net_force, True))
+					self.add_force(Force(other.net_force, True))
+
 				# pushing out
 				if s_vel.unit:
-					self.obj.position -= s_vel.unit*0.1
+					s_dot = self.obj.position.dot(normal)
+					o_dot = other.obj.position.dot(normal)
+
+					if s_dot >= o_dot:
+						self.obj.position += normal*0.1
+					else:
+						self.obj.position -= normal*0.1
 
 	def remove_force(self, force):
 		self._forces.remove(force)
