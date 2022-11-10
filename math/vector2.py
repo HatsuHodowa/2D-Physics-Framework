@@ -52,7 +52,10 @@ class Vector2:
 
 	@property
 	def unit(self):
-		return self / self.magnitude
+		if self.magnitude != 0:
+			return self / self.magnitude
+		else:
+			return None
 
 	@property
 	def x(self):

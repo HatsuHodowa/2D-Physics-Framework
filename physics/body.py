@@ -40,6 +40,10 @@ class RigidBody:
 		self.id = RigidBody.next_id
 		RigidBody.next_id += 1
 
+		self.anchored = False
+		self.gravity = Force(0, -9.8)
+		self.add_force(self.gravity)
+
 		RigidBody.all_bodies.append(self)
 
 	def __eq__(self, other):
@@ -54,7 +58,10 @@ class RigidBody:
 
 		acceleration = self.net_force / self.obj.mass
 		self.obj.velocity += acceleration * dt
-		self.obj.position += self.obj.velocity * dt
+
+		# moving body
+		if not self.anchored:
+			self.obj.position += self.obj.velocity * dt
 
 	def calculate_normal_forces(self):
 		objects = RigidBody.all_bodies.copy()
@@ -64,12 +71,18 @@ class RigidBody:
 
 			# checking collision
 			collides, normal = self.obj.check_collision(other.obj)
-			if collides:
+			if collides and self.anchored == False:
 
 				# colliding / normal force
-				s_net = self.net_force
-				o_net = other.net_force
-				self.add_force(Force(o_net, True))
+				s_vel = self.obj.velocity
+				o_vel = other.obj.velocity
+
+				final_velocity = (s_vel * self.obj.mass + o_vel * other.obj.mass) / (self.obj.mass + other.obj.mass)
+				self.obj.velocity = final_velocity
+
+				# pushing out
+				if s_vel.unit:
+					self.obj.position -= s_vel.unit*0.1
 
 	def remove_force(self, force):
 		self._forces.remove(force)
