@@ -4,6 +4,13 @@ import sys
 import os
 import threading
 
+def loop():
+	while True:
+		time.sleep(1)
+
+thread = threading.Thread(target=loop)
+thread.start()
+
 sys.path.append("math")
 sys.path.append("graphics")
 sys.path.append("objects")

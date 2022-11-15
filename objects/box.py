@@ -126,4 +126,7 @@ class Box:
 
 	@property
 	def mass(self):
-		return self.area * self.density
+		if self.body.anchored:
+			return 999999999999999
+		else:
+			return self.area * self.density

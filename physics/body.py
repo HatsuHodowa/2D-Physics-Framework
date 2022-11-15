@@ -80,11 +80,7 @@ class RigidBody:
 				# velocity
 				final_velocity = (s_vel * self.obj.mass + o_vel * other.obj.mass) / (self.obj.mass + other.obj.mass)
 				self.obj.velocity = final_velocity
-
-				# force
-				if self.anchored == False:
-					self.add_force(Force(-self.net_force, True))
-					self.add_force(Force(other.net_force, True))
+				other.obj.velocity = final_velocity
 
 				# pushing out
 				if s_vel.unit:

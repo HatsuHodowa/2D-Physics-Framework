@@ -1,7 +1,9 @@
-ground = Box(screen=surface, position=Vector2(0, -10), size=Vector2(50, 10), color=(0, 255, 0))
+ground = Box(screen=surface, position=Vector2(0, -20), size=Vector2(50, 10), color=(0, 255, 0))
 ground.body.anchored = True
 
-box1 = Box(screen=surface, position=Vector2(0, 5), size=Vector2(2, 2), color=(255, 0, 0))
-box2 = Box(screen=surface, position=Vector2(5, 5), size=Vector2(2, 2), color=(0, 0, 255))
+boxes = []
 
-box1.body.add_force(Force(5, 0))
+for x in range(0, 20, 7):
+    for y in range(5, 10, 5):
+        box = Box(screen=surface, position=Vector2(x, y), size=Vector2(1, 1), color=(255, 0, 0))
+        boxes.append(box)
