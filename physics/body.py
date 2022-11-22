@@ -1,8 +1,7 @@
 import sys
-import math
-from telnetlib import theNULL
 import time
 import threading
+from xmlrpc.client import MAXINT
 
 sys.path.append("math")
 from cframe import *
@@ -34,15 +33,15 @@ class RigidBody:
 	all_bodies = []
 	next_id = 0
 
-	def __init__(self, obj):
+	def __init__(self, obj, use_gravity=True):
 		self._forces = []
 		self.obj = obj
 		self.id = RigidBody.next_id
 		RigidBody.next_id += 1
 
 		self.anchored = False
-		self.gravity = Force(0, -9.8)
-		self.add_force(self.gravity)
+		self.gravity = Force()
+		self.use_gravity = use_gravity
 
 		RigidBody.all_bodies.append(self)
 
@@ -52,16 +51,26 @@ class RigidBody:
 
 		return self.id == other.id
 
+	def destroy(self):
+		RigidBody.all_bodies.remove(self)
+
 	def update(self, dt):
 		self.clear_temp_forces()
-		self.calculate_normal_forces()
+		
+		# adding gravity
+		if self.use_gravity and not self.anchored:
+			self.gravity = Force(0, -9.8 * self.mass)
+			self.add_force(self.gravity, True)
+		else:
+			self.gravity = Force()
 
-		acceleration = self.net_force / self.obj.mass
+		# calculating velocity and position
+		self.calculate_normal_forces()
+		acceleration = self.net_force / self.mass
 		self.obj.velocity += acceleration * dt
 
 		# moving body
-		if not self.anchored:
-			self.obj.position += self.obj.velocity * dt
+		self.obj.position += self.obj.velocity * dt
 
 	def calculate_normal_forces(self):
 		objects = RigidBody.all_bodies.copy()
@@ -70,7 +79,7 @@ class RigidBody:
 				continue
 
 			# checking collision
-			collides, normal = self.obj.check_collision(other.obj)
+			collides, coll_size, normal = self.obj.check_collision(other.obj)
 			if collides and self.anchored == False:
 
 				# colliding / normal force
@@ -78,7 +87,7 @@ class RigidBody:
 				o_vel = other.obj.velocity
 
 				# velocity
-				final_velocity = (s_vel * self.obj.mass + o_vel * other.obj.mass) / (self.obj.mass + other.obj.mass)
+				final_velocity = (s_vel * self.mass + o_vel * other.obj.mass) / (self.mass + other.obj.mass)
 				self.obj.velocity = final_velocity
 				other.obj.velocity = final_velocity
 
@@ -87,10 +96,17 @@ class RigidBody:
 					s_dot = self.obj.position.dot(normal)
 					o_dot = other.obj.position.dot(normal)
 
+					# finding distance
+					dist = 0
+					if normal == Vector2(1, 0):
+						dist = coll_size.x
+					elif normal == Vector2(0, 1):
+						dist = coll_size.y
+
 					if s_dot >= o_dot:
-						self.obj.position += normal*0.1
+						self.obj.position += normal*dist
 					else:
-						self.obj.position -= normal*0.1
+						self.obj.position -= normal*dist
 
 	def remove_force(self, force):
 		self._forces.remove(force)
@@ -110,6 +126,10 @@ class RigidBody:
 		for force in self.forces:
 			if force.one_frame:
 				self.remove_force(force)
+
+	@property
+	def mass(self):
+		return self.obj.mass
 
 	@property
 	def forces(self):

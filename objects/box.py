@@ -1,4 +1,5 @@
 import sys
+from xmlrpc.client import MAXINT
 import pygame
 pygame.init()
 
@@ -6,12 +7,13 @@ sys.path.append("math")
 sys.path.append("physics")
 from cframe import *
 from body import *
+from raycast import *
 
 # class
 class Box:
 	all_boxes = []
 	next_id = 0
-	def __init__(self, **kwargs):
+	def __init__(self, uses_body=True, **kwargs):
 		self.size = Vector2(5, 5)
 		self.position = Vector2()
 		self.velocity = Vector2()
@@ -23,7 +25,10 @@ class Box:
 		Box.next_id += 1
 
 		self.density = 0.1
-		self.body = RigidBody(self)
+		if uses_body:
+			self.body = RigidBody(self)
+		else:
+			self.body = None
 
 		# keyword arguments
 		self.screen = None
@@ -39,6 +44,11 @@ class Box:
 			return False
 
 		return self.id == other.id
+
+	def destroy(self):
+		if self.body:
+			self.body.destroy()
+		Box.all_boxes.remove(self)
 
 	def calculate_points(self):
 		points = []
@@ -87,10 +97,17 @@ class Box:
 		xbool = s_left <= o_right and s_right >= o_left
 		ybool = s_top >= o_bottom and s_bottom <= o_top
 
-		# checking colliding normal
+		# finding collision volume
+		coll_size = 0
 		axis = None
-
 		if xbool and ybool:
+
+			# calculating volume
+			height = abs(min(s_top, o_top) - max(s_bottom, o_bottom))
+			width = abs(min(s_left, o_left) - max(s_right, o_right))
+			coll_size = Vector2(width, height)
+
+			# calculating normal
 			x_dist = min(abs(s_left - o_right), abs(o_left - s_right))
 			y_dist = min(abs(s_bottom - o_top), abs(o_bottom - s_top))
 			min_dist = min(x_dist, y_dist)
@@ -100,7 +117,23 @@ class Box:
 			else:
 				axis = Vector2(0, 1)
 
-		return xbool and ybool, axis
+		return xbool and ybool, coll_size, axis
+
+	def edge_collision(self, other):
+
+		# looping edges
+		results = []
+		s_points = self.calculate_points()
+		o_points = other.calculate_points()
+		for o_i, o_point2 in enumerate(o_points):
+			o_point1 = o_points[o_i - 1]
+
+			# raycasting
+			result = Raycast(self.screen, o_point1, o_point2 - o_point1, [self], "Whitelist")
+			results.append(result)
+
+		# returning results
+		return results
 
 	@property
 	def check_collision(self):
@@ -127,6 +160,6 @@ class Box:
 	@property
 	def mass(self):
 		if self.body.anchored:
-			return 999999999999999
+			return MAXINT
 		else:
 			return self.area * self.density

@@ -4,13 +4,6 @@ import sys
 import os
 import threading
 
-def loop():
-	while True:
-		time.sleep(1)
-
-thread = threading.Thread(target=loop)
-thread.start()
-
 sys.path.append("math")
 sys.path.append("graphics")
 sys.path.append("objects")
@@ -19,6 +12,7 @@ from cframe import *
 from box import *
 from camera import *
 from body import *
+from raycast import *
 
 pygame.init()
 
@@ -50,14 +44,15 @@ while window_active:
 
 	# time ------------------------------------------
 	t1 = time.time()
-	clock.tick(60)
+	time.sleep(0.01)#clock.tick(60)
 	t2 = time.time()
-	dt = t2 - t1
+	dt = (t2 - t1)
 
 	# events ---------------------------------------
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
 			window_active = False
+			exit()
 		elif event.type == pygame.MOUSEWHEEL:
 			camera.adjust_zoom(event.y)
 		elif event.type == pygame.KEYDOWN:
